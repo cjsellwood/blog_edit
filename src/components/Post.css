@@ -1,0 +1,99 @@
+.Post {
+  line-height: 1.5;
+  color: rgb(235, 235, 235);
+  padding: 15px;
+  margin: 15px;
+  position: relative;
+  background-color: rgb(29, 29, 29);
+  border: 1px solid white;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+}
+
+.Post ol {
+  list-style: none;
+}
+
+.comment-list {
+  margin: 10px 0;
+}
+
+.comment-list li {
+  margin: 10px 0;
+  position: relative;
+  padding: 10px;
+  border: 1px solid white;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+}
+
+.comment-title {
+  margin: 10px 0;
+}
+
+.comment-text {
+  margin: 10px 0;
+}
+
+.form-title {
+  display: block;
+  margin: 0 auto;
+}
+
+.form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: min(100%, 400px);
+  margin: 0 auto;
+}
+
+.form div {
+  width: 100%;
+}
+
+.form label {
+  display: block;
+  margin-top: 10px;
+}
+
+.form input {
+  display: block;
+  font-size: inherit;
+  padding: 5px;
+  width: 100%;
+}
+
+.form textarea {
+  display: block;
+  font-size: inherit;
+  padding: 5px;
+  width: 100%;
+}
+
+.form button {
+  font-size: inherit;
+  padding: 18px 25px;
+  cursor: pointer;
+  background-color: rgb(0, 95, 0);
+  color: white;
+  margin-top: 15px;
+  border: none;
+  outline: none;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+}
+
+.form button:hover {
+  background-color: rgb(0, 124, 0);
+}

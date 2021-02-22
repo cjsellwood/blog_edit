@@ -155,7 +155,7 @@ const App = () => {
             comments: [
               ...filteredPost.comments,
               {
-                ...comment,
+                ...data.comment,
                 date: Date.now(),
               },
             ],
@@ -325,6 +325,39 @@ const App = () => {
       });
   };
 
+  // Delete comment
+  const deleteComment = (id, commentId) => {
+    // Find index of which post to update
+    let index;
+    const filteredPost = posts.filter((el, i) => {
+      if (el._id === id) {
+        index = i;
+      }
+      return el._id === id;
+    })[0];
+    const options = {
+      method: "DELETE",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch(`http://localhost:3000/posts/${id}/comment/${commentId}`, options)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        // Change post in state
+        if (data.status === "Success") {
+          const clonedPosts = clonePosts(posts);
+          const filteredComments = filteredPost.comments.filter((el) => {
+            return el._id !== commentId;
+          });
+          clonedPosts[index].comments = filteredComments;
+          setPosts(clonedPosts);
+        }
+      });
+  };
+
   return loading ? (
     <p>Loading</p>
   ) : (
@@ -354,6 +387,7 @@ const App = () => {
             handleInput={handleInput}
             comment={comment}
             deletePost={deletePost}
+            deleteComment={deleteComment}
           />
         </Route>
         <Route exact path="/">

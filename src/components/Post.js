@@ -17,6 +17,7 @@ const Post = (props) => {
           <p>{comment.username}</p>
           <p className="date">{new Date(comment.date).toLocaleDateString()}</p>
           <p className="comment-text">{comment.text}</p>
+          <button onClick={(e) => props.deleteComment(id, comment._id, e)}>Delete</button>
         </li>
       );
     });

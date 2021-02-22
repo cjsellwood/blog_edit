@@ -182,17 +182,11 @@ const App = () => {
   const handlePostInput = (e) => {
     // If clicked on checkboxes
     if (e.target.name === "publish") {
-      if (e.target.value === "true") {
-        setPostForm({
-          ...postForm,
-          published: true,
-        });
-      } else {
-        setPostForm({
-          ...postForm,
-          published: false,
-        });
-      }
+      setPostForm({
+        ...postForm,
+        [e.target.name]: "true" === e.target.value,
+      });
+
       // Typing in inputs
     } else {
       setPostForm({
@@ -232,7 +226,7 @@ const App = () => {
   const deletePost = (e) => {
     const id = e.target.getAttribute("data-id");
 
-    // Find which post to change published on
+    // Find index of which post to delete
     let index;
     const filteredPost = posts.filter((el, i) => {
       if (el._id === id) {
@@ -264,6 +258,73 @@ const App = () => {
       });
   };
 
+  // Edit form state
+  const [editPost, setEditPost] = useState({
+    title: "",
+    text: "",
+    published: false,
+  });
+
+  // Set values of pre filled edit form data
+  const startEditing = (id) => {
+    const filteredPost = posts.filter((el) => {
+      return el._id === id;
+    })[0];
+    setEditPost({
+      title: filteredPost.title,
+      text: filteredPost.text,
+      published: filteredPost.published,
+    });
+  };
+
+  // Handle input change
+  const handleEditInput = (e) => {
+    if (e.target.name === "published") {
+      setEditPost({
+        ...editPost,
+        [e.target.name]: "true" === e.target.value,
+      });
+    } else {
+      setEditPost({
+        ...editPost,
+        [e.target.name]: e.target.value,
+      });
+    }
+  };
+
+  // Handle submission of edit form data
+  const handleEditSubmit = (e) => {
+    const id = e.target.getAttribute("data-id");
+
+    // Find index of which post to update
+    let index;
+    const filteredPost = posts.filter((el, i) => {
+      if (el._id === id) {
+        index = i;
+      }
+      return el._id === id;
+    })[0];
+    e.preventDefault();
+    console.log(editPost);
+    const options = {
+      method: "PATCH",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, ...editPost }),
+    };
+    fetch(`http://localhost:3000/posts/${id}`, options)
+      .then((res) => res.json())
+      .then((data) => {
+        // Change post in state
+        history.push(`/${id}`);
+        const clonedPosts = clonePosts(posts);
+        clonedPosts.splice(index, 1, data.editedPost);
+        setPosts(clonedPosts);
+      });
+  };
+
   return loading ? (
     <p>Loading</p>
   ) : (
@@ -277,7 +338,14 @@ const App = () => {
           />
         </Route>
         <Route path="/:id/edit">
-          <EditForm postForm={postForm}/>
+          <EditForm
+            postForm={postForm}
+            posts={posts}
+            startEditing={startEditing}
+            handleEditInput={handleEditInput}
+            editPost={editPost}
+            handleEditSubmit={handleEditSubmit}
+          />
         </Route>
         <Route path="/:id">
           <Post

@@ -1,20 +1,13 @@
 import React from "react";
 import "./Post.css";
-import { useParams, Link, useHistory } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 const Post = (props) => {
-  // const [post, setPost] = useState({});
   const { id } = useParams();
-  // let history = useHistory();
 
   const filteredPost = props.posts.filter((el) => {
     return el._id === id;
   })[0];
-
-  // if (!filteredPost) {
-  //   history.push("/")
-  //   return null;
-  // }
 
   let comments = null;
   if (typeof filteredPost.title !== "undefined") {

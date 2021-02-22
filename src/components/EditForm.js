@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
 
 const EditForm = (props) => {
+  const { id } = useParams();
+  useEffect(() => {
+    props.startEditing(id);
+  }, []);
+
   return (
     <div className="NewForm">
       <h1 className="title">New Blog Post</h1>
-      <form className="form" onSubmit={props.newPost}>
+      <form
+        className="form"
+        onSubmit={props.handleEditSubmit}
+        data-id={id}
+      >
         <div>
           <label htmlFor="title">Title</label>
           <input
@@ -12,8 +22,8 @@ const EditForm = (props) => {
             placeholder="Title"
             name="title"
             id="title"
-            onChange={props.handlePostInput}
-            value={props.postForm.title}
+            onChange={props.handleEditInput}
+            value={props.editPost.title}
           />
         </div>
         <div>
@@ -23,8 +33,8 @@ const EditForm = (props) => {
             name="text"
             id="text"
             rows="20"
-            onChange={props.handlePostInput}
-            value={props.postForm.text}
+            onChange={props.handleEditInput}
+            value={props.editPost.text}
           ></textarea>
         </div>
         <div className="radio">
@@ -32,23 +42,25 @@ const EditForm = (props) => {
           <input
             type="radio"
             id="publish"
-            name="publish"
+            name="published"
             value="true"
-            onChange={props.handlePostInput}
+            onChange={props.handleEditInput}
+            checked={props.editPost.published}
           />
           <label htmlFor="publish">Yes</label>
           <br></br>
           <input
             type="radio"
             id="unpublish"
-            name="publish"
+            name="published"
             value="false"
-            onChange={props.handlePostInput}
+            onChange={props.handleEditInput}
+            checked={!props.editPost.published}
           />
           <label htmlFor="unpublish">No</label>
         </div>
         <button>Submit</button>
-      </form>{" "}
+      </form>
     </div>
   );
 };

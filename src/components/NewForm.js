@@ -36,6 +36,7 @@ const NewForm = (props) => {
             name="publish"
             value="true"
             onChange={props.handlePostInput}
+            checked={props.postForm.published}
           />
           <label htmlFor="publish">Yes</label>
           <br></br>
@@ -45,6 +46,7 @@ const NewForm = (props) => {
             name="publish"
             value="false"
             onChange={props.handlePostInput}
+            checked={!props.postForm.published}
           />
           <label htmlFor="unpublish">No</label>
         </div>

@@ -16,7 +16,7 @@ const App = () => {
         "Content-Type": "application/json",
       },
     };
-    fetch("http://10.0.0.6:3000/posts", { options })
+    fetch("http://10.0.0.6:3000/posts/all", { options })
       .then((res) => {
         return res.json();
       })
@@ -26,17 +26,69 @@ const App = () => {
       });
   }, []);
 
+  // Change published status
+  const publish = (e) => {
+    e.preventDefault();
+
+    const id = e.target.getAttribute("data-id");
+
+    // Find which post to change published on
+    let index;
+    const filteredPost = posts.filter((el, i) => {
+      if (el._id === id) {
+        index = i;
+      }
+      return el._id === id;
+    })[0];
+
+    const options = {
+      method: "PATCH",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, published: filteredPost.published }),
+    };
+    // Change published status on server
+    fetch(`http://localhost:3000/posts/${id}/publish`, options)
+      .then((res) => {
+        return res.json();
+      })
+      .then((data) => {
+        if (data.status === "Success") {
+          const newPosts = [
+            ...posts.slice(0, index),
+            data.post,
+            ...posts.slice(index + 1),
+          ];
+          setPosts(newPosts);
+        }
+      });
+  };
+
   let postsDisplay = [];
   if (posts.length) {
     postsDisplay = posts.map((post) => {
-      if (!post.published) {
-        return null;
-      }
       return (
         <li key={post._id} className="post">
           <Link to={`/${post._id}`}>
             <h1>{post.title}</h1>
             <p className="date">{new Date(post.date).toLocaleDateString()}</p>
+            {post.published ? (
+              <div className="published">
+                <p>Status: Published</p>
+                <button onClick={publish} data-id={post._id}>
+                  Change
+                </button>
+              </div>
+            ) : (
+              <div className="published">
+                <p>Status: Unpublished</p>
+                <button onClick={publish} data-id={post._id}>
+                  Change
+                </button>
+              </div>
+            )}
           </Link>
         </li>
       );
@@ -100,7 +152,7 @@ const App = () => {
                 },
               ],
             },
-            ...posts.slice(index),
+            ...posts.slice(index + 1),
           ];
           setPosts(newPosts);
 
@@ -128,7 +180,7 @@ const App = () => {
         </Route>
         <Route exact path="/">
           <div className="title">
-            <h1>Blog Posts</h1>
+            <h1>My Blog Posts</h1>
           </div>
           <ul>{postsDisplay}</ul>
         </Route>

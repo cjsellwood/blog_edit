@@ -1,12 +1,24 @@
 import "./App.css";
 import React from "react";
 import { useState, useEffect } from "react";
-import { Switch, Link, Route } from "react-router-dom";
+import { Switch, Link, Route, useHistory } from "react-router-dom";
 import Post from "./components/Post";
+import NewForm from "./components/NewForm";
+import EditForm from "./components/EditForm";
 
 const App = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  let history = useHistory();
+
+  const clonePosts = (posts) => {
+    return posts.map((el) => {
+      return {
+        ...el,
+        comments: [...el.comments],
+      };
+    });
+  };
 
   useEffect(() => {
     const options = {
@@ -56,12 +68,9 @@ const App = () => {
       })
       .then((data) => {
         if (data.status === "Success") {
-          const newPosts = [
-            ...posts.slice(0, index),
-            data.post,
-            ...posts.slice(index + 1),
-          ];
-          setPosts(newPosts);
+          const clonedPosts = clonePosts(posts);
+          clonedPosts.splice(index, 1, data.post);
+          setPosts(clonedPosts);
         }
       });
   };
@@ -140,21 +149,18 @@ const App = () => {
         // If successfully added to database add to react state
         if (data.status === "Success") {
           // Update state immutably
-          const newPosts = [
-            ...posts.slice(0, index),
-            {
-              ...filteredPost,
-              comments: [
-                ...filteredPost.comments,
-                {
-                  ...comment,
-                  date: Date.now(),
-                },
-              ],
-            },
-            ...posts.slice(index + 1),
-          ];
-          setPosts(newPosts);
+          const clonedPosts = clonePosts(posts);
+          clonedPosts.splice(index, 1, {
+            ...filteredPost,
+            comments: [
+              ...filteredPost.comments,
+              {
+                ...comment,
+                date: Date.now(),
+              },
+            ],
+          });
+          setPosts(clonedPosts);
 
           // Reset form
           setComment({
@@ -165,22 +171,127 @@ const App = () => {
       });
   };
 
+  // New Post form values
+  const [postForm, setPostForm] = useState({
+    title: "",
+    text: "",
+    published: false,
+  });
+
+  // Handle input from new post form
+  const handlePostInput = (e) => {
+    // If clicked on checkboxes
+    if (e.target.name === "publish") {
+      if (e.target.value === "true") {
+        setPostForm({
+          ...postForm,
+          published: true,
+        });
+      } else {
+        setPostForm({
+          ...postForm,
+          published: false,
+        });
+      }
+      // Typing in inputs
+    } else {
+      setPostForm({
+        ...postForm,
+        [e.target.name]: e.target.value,
+      });
+    }
+  };
+
+  // Submit new post
+  const newPost = (e) => {
+    e.preventDefault();
+    console.log(postForm);
+
+    const options = {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postForm),
+    };
+
+    // Save new post to server
+    fetch(`http://localhost:3000/posts`, options)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "Success") {
+          const clonedPosts = clonePosts(posts);
+          setPosts([...clonedPosts, data.newPost]);
+          history.push("/");
+        }
+      });
+  };
+
+  // Delete Post
+  const deletePost = (e) => {
+    const id = e.target.getAttribute("data-id");
+
+    // Find which post to change published on
+    let index;
+    const filteredPost = posts.filter((el, i) => {
+      if (el._id === id) {
+        index = i;
+      }
+      return el._id === id;
+    })[0];
+
+    const options = {
+      method: "DELETE",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    };
+
+    // Delete post from server
+    fetch(`http://localhost:3000/posts/${id}`, options)
+      .then((res) => res.json())
+      .then((data) => {
+        // Delete from state
+        if (data.status === "Success") {
+          const clonedPosts = clonePosts(posts);
+          clonedPosts.splice(index, 1);
+          history.replace("/");
+          setPosts(clonedPosts);
+        }
+      });
+  };
+
   return loading ? (
     <p>Loading</p>
   ) : (
     <div className="App">
       <Switch>
+        <Route path="/new">
+          <NewForm
+            newPost={newPost}
+            handlePostInput={handlePostInput}
+            postForm={postForm}
+          />
+        </Route>
+        <Route path="/:id/edit">
+          <EditForm postForm={postForm}/>
+        </Route>
         <Route path="/:id">
           <Post
             posts={posts}
             addComment={addComment}
             handleInput={handleInput}
             comment={comment}
+            deletePost={deletePost}
           />
         </Route>
         <Route exact path="/">
           <div className="title">
             <h1>My Blog Posts</h1>
+            <Link to="/new">New Post</Link>
           </div>
           <ul>{postsDisplay}</ul>
         </Route>

@@ -62,6 +62,7 @@
 .form label {
   display: block;
   margin-top: 10px;
+  color: white;
 }
 
 .form input {
@@ -96,4 +97,35 @@
 
 .form button:hover {
   background-color: rgb(0, 124, 0);
+}
+
+.update-buttons {
+  display: flex;
+  justify-content: center;
+
+}
+
+.update-buttons button,
+.update-buttons a {
+  width: 150px;
+  padding: 10px 0;
+  margin: 10px;
+  display: block;
+  font: inherit;
+  background-color: white;
+  border: none;
+  color: black;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.update-buttons button:hover ,
+.update-buttons a:hover  {
+background-color: rgb(216, 216, 216);
 }

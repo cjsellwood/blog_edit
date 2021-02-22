@@ -1,14 +1,20 @@
 import React from "react";
 import "./Post.css";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useHistory } from "react-router-dom";
 
 const Post = (props) => {
   // const [post, setPost] = useState({});
   const { id } = useParams();
+  // let history = useHistory();
 
   const filteredPost = props.posts.filter((el) => {
     return el._id === id;
   })[0];
+
+  // if (!filteredPost) {
+  //   history.push("/")
+  //   return null;
+  // }
 
   let comments = null;
   if (typeof filteredPost.title !== "undefined") {
@@ -28,10 +34,19 @@ const Post = (props) => {
       <h1 className="title">{filteredPost.title}</h1>
       <p className="date">{new Date(filteredPost.date).toLocaleDateString()}</p>
       <p>{filteredPost.text}</p>
+      <div className="update-buttons">
+        <Link to={`/${filteredPost._id}/edit`}>Edit</Link>
+        <button onClick={props.deletePost} data-id={filteredPost._id}>Delete</button>
+      </div>
       <h2 className="comment-title">Comments</h2>
       <ol className="comment-list">{comments}</ol>
-      <form onSubmit={props.addComment} method="POST" data-id={id} className="form">
-      <h3>Add Comment</h3>
+      <form
+        onSubmit={props.addComment}
+        method="POST"
+        data-id={id}
+        className="form"
+      >
+        <h3>Add Comment</h3>
         <div>
           <label htmlFor="username">Username</label>
           <input

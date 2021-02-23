@@ -7,13 +7,14 @@ import NewForm from "./components/NewForm";
 import EditForm from "./components/EditForm";
 import Login from "./components/Login";
 import Auth from "./components/Auth";
-import Spinner from "./components/Spinner"
+import Spinner from "./components/Spinner";
+import ScrollToTop from "./components/ScrollToTop";
 
 const App = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   let history = useHistory();
-  const baseUrl = "https://desolate-sands-05653.herokuapp.com"
+  const baseUrl = "https://desolate-sands-05653.herokuapp.com";
 
   // Clone posts immutably
   const clonePosts = (posts) => {
@@ -297,7 +298,7 @@ const App = () => {
           clonedPosts.splice(index, 1);
           history.replace("/");
           setPosts(clonedPosts);
-          setLoading(false)
+          setLoading(false);
         }
       })
       .catch((err) => {
@@ -345,7 +346,7 @@ const App = () => {
   // Handle submission of edit form data
   const handleEditSubmit = (e) => {
     const id = e.target.getAttribute("data-id");
-    setLoading(true)
+    setLoading(true);
 
     // Find index of which post to update
     let index;
@@ -379,10 +380,10 @@ const App = () => {
         const clonedPosts = clonePosts(posts);
         clonedPosts.splice(index, 1, data.editedPost);
         setPosts(clonedPosts);
-        setLoading(false)
+        setLoading(false);
       })
       .catch((err) => {
-        setLoading(false)
+        setLoading(false);
         if (err.message === "Unauthorized") {
           history.push("/login");
         }
@@ -451,7 +452,6 @@ const App = () => {
   // Log user in on form submission
   const login = (e) => {
     e.preventDefault();
-    console.log(loginForm);
     const options = {
       method: "POST",
       mode: "cors",
@@ -460,7 +460,7 @@ const App = () => {
       },
       body: JSON.stringify(loginForm),
     };
-    fetch("${baseUrl}/posts/login", options)
+    fetch(`${baseUrl}/posts/login`, options)
       .then((res) => res.json())
       .then((data) => {
         if (data.message === "Auth Passed") {
@@ -500,9 +500,9 @@ const App = () => {
 
   return loading ? (
     <Spinner></Spinner>
-    
   ) : (
     <div className="App">
+      <ScrollToTop />
       <Switch>
         <Route path="/login">
           <Login

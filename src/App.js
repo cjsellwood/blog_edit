@@ -1,17 +1,19 @@
 import "./App.css";
 import React from "react";
 import { useState, useEffect } from "react";
-import { Switch, Link, Route, useHistory, Redirect } from "react-router-dom";
+import { Switch, Link, Route, useHistory } from "react-router-dom";
 import Post from "./components/Post";
 import NewForm from "./components/NewForm";
 import EditForm from "./components/EditForm";
 import Login from "./components/Login";
 import Auth from "./components/Auth";
+import Spinner from "./components/Spinner"
 
 const App = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   let history = useHistory();
+  const baseUrl = "https://desolate-sands-05653.herokuapp.com"
 
   // Clone posts immutably
   const clonePosts = (posts) => {
@@ -32,7 +34,7 @@ const App = () => {
         "Content-Type": "application/json",
       },
     };
-    fetch("http://10.0.0.6:3000/posts/all", { options })
+    fetch(`${baseUrl}/posts/all`, options)
       .then((res) => {
         return res.json();
       })
@@ -67,7 +69,7 @@ const App = () => {
       body: JSON.stringify({ id, published: filteredPost.published }),
     };
     // Change published status on server
-    fetch(`http://localhost:3000/posts/${id}/publish`, options)
+    fetch(`${baseUrl}/posts/${id}/publish`, options)
       .then((res) => {
         if (res.status === 401) {
           throw new Error("Unauthorized");
@@ -82,7 +84,6 @@ const App = () => {
         }
       })
       .catch((err) => {
-        console.log(err.message);
         if (err.message === "Unauthorized") {
           history.push("/login");
         }
@@ -146,7 +147,7 @@ const App = () => {
       body: JSON.stringify(comment),
     };
     // Save new comment on server database
-    fetch(`http://localhost:3000/posts/${id}/comment`, options)
+    fetch(`${baseUrl}/posts/${id}/comment`, options)
       .then((res) => {
         return res.json();
       })
@@ -214,6 +215,7 @@ const App = () => {
   const newPost = (e) => {
     e.preventDefault();
     console.log(postForm);
+    setLoading(true);
 
     const options = {
       method: "POST",
@@ -226,7 +228,7 @@ const App = () => {
     };
 
     // Save new post to server
-    fetch(`http://localhost:3000/posts`, options)
+    fetch(`${baseUrl}/posts`, options)
       .then((res) => {
         if (res.status === 401) {
           throw new Error("Unauthorized");
@@ -246,10 +248,11 @@ const App = () => {
             text: "",
             published: false,
           });
+          setLoading(false);
         }
       })
       .catch((err) => {
-        console.log(err.message);
+        setLoading(false);
         if (err.message === "Unauthorized") {
           history.push("/login");
         }
@@ -259,7 +262,7 @@ const App = () => {
   // Delete Post
   const deletePost = (e) => {
     const id = e.target.getAttribute("data-id");
-
+    setLoading(true);
     // Find index of which post to delete
     let index;
     const filteredPost = posts.filter((el, i) => {
@@ -280,7 +283,7 @@ const App = () => {
     };
 
     // Delete post from server
-    fetch(`http://localhost:3000/posts/${id}`, options)
+    fetch(`${baseUrl}/posts/${id}`, options)
       .then((res) => {
         if (res.status === 401) {
           throw new Error("Unauthorized");
@@ -294,10 +297,11 @@ const App = () => {
           clonedPosts.splice(index, 1);
           history.replace("/");
           setPosts(clonedPosts);
+          setLoading(false)
         }
       })
       .catch((err) => {
-        console.log(err.message);
+        setLoading(false);
         if (err.message === "Unauthorized") {
           history.push("/login");
         }
@@ -341,6 +345,7 @@ const App = () => {
   // Handle submission of edit form data
   const handleEditSubmit = (e) => {
     const id = e.target.getAttribute("data-id");
+    setLoading(true)
 
     // Find index of which post to update
     let index;
@@ -361,7 +366,7 @@ const App = () => {
       },
       body: JSON.stringify({ id, ...editPost }),
     };
-    fetch(`http://localhost:3000/posts/${id}`, options)
+    fetch(`${baseUrl}/posts/${id}`, options)
       .then((res) => {
         if (res.status === 401) {
           throw new Error("Unauthorized");
@@ -374,9 +379,10 @@ const App = () => {
         const clonedPosts = clonePosts(posts);
         clonedPosts.splice(index, 1, data.editedPost);
         setPosts(clonedPosts);
+        setLoading(false)
       })
       .catch((err) => {
-        console.log(err.message);
+        setLoading(false)
         if (err.message === "Unauthorized") {
           history.push("/login");
         }
@@ -401,7 +407,7 @@ const App = () => {
         Authorization: `Bearer ${auth.token}`,
       },
     };
-    fetch(`http://localhost:3000/posts/${id}/comment/${commentId}`, options)
+    fetch(`${baseUrl}/posts/${id}/comment/${commentId}`, options)
       .then((res) => {
         if (res.status === 401) {
           throw new Error("Unauthorized");
@@ -409,7 +415,6 @@ const App = () => {
         return res.json();
       })
       .then((data) => {
-        console.log(data);
         // Change post in state
         if (data.status === "Success") {
           const clonedPosts = clonePosts(posts);
@@ -421,7 +426,6 @@ const App = () => {
         }
       })
       .catch((err) => {
-        console.log(err.message);
         if (err.message === "Unauthorized") {
           history.push("/login");
         }
@@ -456,10 +460,9 @@ const App = () => {
       },
       body: JSON.stringify(loginForm),
     };
-    fetch("http://localhost:3000/posts/login", options)
+    fetch("${baseUrl}/posts/login", options)
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
         if (data.message === "Auth Passed") {
           setAuth({
             ...auth,
@@ -496,7 +499,8 @@ const App = () => {
   }, []);
 
   return loading ? (
-    <h1>Loading</h1>
+    <Spinner></Spinner>
+    
   ) : (
     <div className="App">
       <Switch>

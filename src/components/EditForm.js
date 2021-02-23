@@ -9,7 +9,7 @@ const EditForm = (props) => {
 
   return (
     <div className="NewForm">
-      <h1 className="title">New Blog Post</h1>
+      <h1 className="title">Edit Blog Post</h1>
       <form
         className="form"
         onSubmit={props.handleEditSubmit}

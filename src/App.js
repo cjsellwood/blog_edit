@@ -1,16 +1,19 @@
 import "./App.css";
 import React from "react";
 import { useState, useEffect } from "react";
-import { Switch, Link, Route, useHistory } from "react-router-dom";
+import { Switch, Link, Route, useHistory, Redirect } from "react-router-dom";
 import Post from "./components/Post";
 import NewForm from "./components/NewForm";
 import EditForm from "./components/EditForm";
+import Login from "./components/Login";
+import Auth from "./components/Auth";
 
 const App = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   let history = useHistory();
 
+  // Clone posts immutably
   const clonePosts = (posts) => {
     return posts.map((el) => {
       return {
@@ -20,6 +23,7 @@ const App = () => {
     });
   };
 
+  // Get all posts
   useEffect(() => {
     const options = {
       method: "GET",
@@ -58,12 +62,16 @@ const App = () => {
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.token}`,
       },
       body: JSON.stringify({ id, published: filteredPost.published }),
     };
     // Change published status on server
     fetch(`http://localhost:3000/posts/${id}/publish`, options)
       .then((res) => {
+        if (res.status === 401) {
+          throw new Error("Unauthorized");
+        }
         return res.json();
       })
       .then((data) => {
@@ -71,6 +79,12 @@ const App = () => {
           const clonedPosts = clonePosts(posts);
           clonedPosts.splice(index, 1, data.post);
           setPosts(clonedPosts);
+        }
+      })
+      .catch((err) => {
+        console.log(err.message);
+        if (err.message === "Unauthorized") {
+          history.push("/login");
         }
       });
   };
@@ -181,7 +195,7 @@ const App = () => {
   // Handle input from new post form
   const handlePostInput = (e) => {
     // If clicked on checkboxes
-    if (e.target.name === "publish") {
+    if (e.target.name === "published") {
       setPostForm({
         ...postForm,
         [e.target.name]: "true" === e.target.value,
@@ -206,18 +220,38 @@ const App = () => {
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.token}`,
       },
       body: JSON.stringify(postForm),
     };
 
     // Save new post to server
     fetch(`http://localhost:3000/posts`, options)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          throw new Error("Unauthorized");
+        }
+        return res.json();
+      })
       .then((data) => {
         if (data.status === "Success") {
+          // Save to react state
           const clonedPosts = clonePosts(posts);
           setPosts([...clonedPosts, data.newPost]);
           history.push("/");
+
+          // Reset form data
+          setPostForm({
+            title: "",
+            text: "",
+            published: false,
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err.message);
+        if (err.message === "Unauthorized") {
+          history.push("/login");
         }
       });
   };
@@ -240,13 +274,19 @@ const App = () => {
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.token}`,
       },
       body: JSON.stringify({ id }),
     };
 
     // Delete post from server
     fetch(`http://localhost:3000/posts/${id}`, options)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          throw new Error("Unauthorized");
+        }
+        return res.json();
+      })
       .then((data) => {
         // Delete from state
         if (data.status === "Success") {
@@ -254,6 +294,12 @@ const App = () => {
           clonedPosts.splice(index, 1);
           history.replace("/");
           setPosts(clonedPosts);
+        }
+      })
+      .catch((err) => {
+        console.log(err.message);
+        if (err.message === "Unauthorized") {
+          history.push("/login");
         }
       });
   };
@@ -311,17 +357,29 @@ const App = () => {
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.token}`,
       },
       body: JSON.stringify({ id, ...editPost }),
     };
     fetch(`http://localhost:3000/posts/${id}`, options)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          throw new Error("Unauthorized");
+        }
+        return res.json();
+      })
       .then((data) => {
         // Change post in state
         history.push(`/${id}`);
         const clonedPosts = clonePosts(posts);
         clonedPosts.splice(index, 1, data.editedPost);
         setPosts(clonedPosts);
+      })
+      .catch((err) => {
+        console.log(err.message);
+        if (err.message === "Unauthorized") {
+          history.push("/login");
+        }
       });
   };
 
@@ -340,10 +398,16 @@ const App = () => {
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.token}`,
       },
     };
     fetch(`http://localhost:3000/posts/${id}/comment/${commentId}`, options)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          throw new Error("Unauthorized");
+        }
+        return res.json();
+      })
       .then((data) => {
         console.log(data);
         // Change post in state
@@ -355,47 +419,135 @@ const App = () => {
           clonedPosts[index].comments = filteredComments;
           setPosts(clonedPosts);
         }
+      })
+      .catch((err) => {
+        console.log(err.message);
+        if (err.message === "Unauthorized") {
+          history.push("/login");
+        }
       });
   };
 
+  // Login form values
+  const [loginForm, setLoginForm] = useState({
+    username: "",
+    password: "",
+  });
+
+  // Login form input handler
+  const loginFormInput = (e) => {
+    setLoginForm({
+      ...loginForm,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const [auth, setAuth] = useState({});
+
+  // Log user in on form submission
+  const login = (e) => {
+    e.preventDefault();
+    console.log(loginForm);
+    const options = {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(loginForm),
+    };
+    fetch("http://localhost:3000/posts/login", options)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        if (data.message === "Auth Passed") {
+          setAuth({
+            ...auth,
+            token: data.token,
+            loggedIn: true,
+            expires: data.expires,
+          });
+          // Store token in local storage
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("expires", Date.now() + data.expires * 1000);
+          setLoginForm({
+            username: "",
+            password: "",
+          });
+          history.push("/");
+        }
+      })
+      .catch((err) => {
+        console.log("ERROR", err);
+      });
+  };
+
+  // Auto login with local storage if possible on start
+  const getToken = () => {
+    const token = localStorage.getItem("token");
+    const expires = localStorage.getItem("expires");
+    if (Date.now() < Number(expires)) {
+      setAuth({ token, loggedIn: true });
+    }
+  };
+
+  useEffect(() => {
+    getToken();
+  }, []);
+
   return loading ? (
-    <p>Loading</p>
+    <h1>Loading</h1>
   ) : (
     <div className="App">
       <Switch>
-        <Route path="/new">
-          <NewForm
-            newPost={newPost}
-            handlePostInput={handlePostInput}
-            postForm={postForm}
+        <Route path="/login">
+          <Login
+            login={login}
+            loginForm={loginForm}
+            loginFormInput={loginFormInput}
           />
+        </Route>
+        <Route path="/new">
+          <Auth auth={auth}>
+            <NewForm
+              newPost={newPost}
+              handlePostInput={handlePostInput}
+              postForm={postForm}
+            />
+          </Auth>
         </Route>
         <Route path="/:id/edit">
-          <EditForm
-            postForm={postForm}
-            posts={posts}
-            startEditing={startEditing}
-            handleEditInput={handleEditInput}
-            editPost={editPost}
-            handleEditSubmit={handleEditSubmit}
-          />
+          <Auth auth={auth}>
+            <EditForm
+              postForm={postForm}
+              posts={posts}
+              startEditing={startEditing}
+              handleEditInput={handleEditInput}
+              editPost={editPost}
+              handleEditSubmit={handleEditSubmit}
+            />
+          </Auth>
         </Route>
         <Route path="/:id">
-          <Post
-            posts={posts}
-            addComment={addComment}
-            handleInput={handleInput}
-            comment={comment}
-            deletePost={deletePost}
-            deleteComment={deleteComment}
-          />
+          <Auth auth={auth}>
+            <Post
+              posts={posts}
+              addComment={addComment}
+              handleInput={handleInput}
+              comment={comment}
+              deletePost={deletePost}
+              deleteComment={deleteComment}
+            />
+          </Auth>
         </Route>
         <Route exact path="/">
-          <div className="title">
-            <h1>My Blog Posts</h1>
-            <Link to="/new">New Post</Link>
-          </div>
-          <ul>{postsDisplay}</ul>
+          <Auth auth={auth}>
+            <div className="title">
+              <h1>My Blog Posts</h1>
+              <Link to="/new">New Post</Link>
+            </div>
+            <ul>{postsDisplay}</ul>
+          </Auth>
         </Route>
       </Switch>
     </div>

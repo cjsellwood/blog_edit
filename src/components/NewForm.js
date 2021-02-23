@@ -15,6 +15,7 @@ const NewForm = (props) => {
             id="title"
             onChange={props.handlePostInput}
             value={props.postForm.title}
+            required
           />
         </div>
         <div>
@@ -26,6 +27,7 @@ const NewForm = (props) => {
             rows="20"
             onChange={props.handlePostInput}
             value={props.postForm.text}
+            required
           ></textarea>
         </div>
         <div className="radio">
@@ -33,7 +35,7 @@ const NewForm = (props) => {
           <input
             type="radio"
             id="publish"
-            name="publish"
+            name="published"
             value="true"
             onChange={props.handlePostInput}
             checked={props.postForm.published}
@@ -43,7 +45,7 @@ const NewForm = (props) => {
           <input
             type="radio"
             id="unpublish"
-            name="publish"
+            name="published"
             value="false"
             onChange={props.handlePostInput}
             checked={!props.postForm.published}

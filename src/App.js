@@ -14,7 +14,7 @@ const App = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   let history = useHistory();
-  const baseUrl = "https://desolate-sands-05653.herokuapp.com";
+  const baseUrl = "https://blog-api22.herokuapp.com";
 
   // Clone posts immutably
   const clonePosts = (posts) => {
